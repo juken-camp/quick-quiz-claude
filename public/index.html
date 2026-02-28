@@ -153,11 +153,12 @@
         .ai-bar-icon:hover{border-color:var(--ac);color:var(--ac);background:var(--ac-bg)}
 
         /* ===== 浮遊メッセージバブル ===== */
-        .float-bubble{position:fixed;left:50%;transform:translateX(-50%);z-index:290;
-            max-width:min(340px,90vw);padding:9px 16px;border-radius:18px;
+        :root{ --bubble-duration:5s; }
+        .float-bubble{position:fixed;right:16px;z-index:290;
+            width:min(400px,calc(100vw - 32px));padding:11px 18px;border-radius:18px;
             font-size:13px;line-height:1.6;font-family:var(--fb);
-            pointer-events:none;text-align:center;
-            animation:bubbleFloat 5s cubic-bezier(.22,1,.36,1) forwards}
+            pointer-events:none;text-align:left;
+            animation:bubbleFloat var(--bubble-duration) cubic-bezier(.22,1,.36,1) forwards}
         .float-bubble.ai{background:rgba(240,239,255,.92);backdrop-filter:blur(8px);
             border:1px solid rgba(108,99,255,.2);color:var(--dk);
             box-shadow:0 4px 20px rgba(108,99,255,.12)}
@@ -166,10 +167,10 @@
         .float-bubble.user{background:rgba(108,99,255,.88);color:var(--wh);
             box-shadow:0 4px 20px rgba(108,99,255,.25)}
         @keyframes bubbleFloat{
-            0%{opacity:0;bottom:72px;transform:translateX(-50%) scale(.9)}
-            12%{opacity:1;transform:translateX(-50%) scale(1)}
+            0%{opacity:0;bottom:72px;transform:scale(.9)}
+            12%{opacity:1;transform:scale(1)}
             70%{opacity:1}
-            100%{opacity:0;bottom:200px;transform:translateX(-50%) scale(.96)}}
+            100%{opacity:0;bottom:220px;transform:scale(.96)}}
 
         /* ===== 設定オーバーレイ ===== */
         .setting-ov{display:none;position:fixed;inset:0;z-index:400;
@@ -362,9 +363,7 @@
 </div>
 
 <!-- FABs -->
-<div class="fab-row" id="fabRow">
-    <button class="fab fab-lt" id="fabBack">📚 教科選択</button>
-</div>
+<div class="fab-row" id="fabRow"></div>
 
 <!-- AI先生 固定バー -->
 <div class="ai-bar" id="aiBar">
@@ -385,7 +384,7 @@
             <span class="mode-label">口調</span>
             <div class="mode-btns">
                 <button class="mode-btn" data-style="teacher">🧑‍🏫 先生</button>
-                <button class="mode-btn mode-active" data-style="friend">🤙 友達</button>
+                <button class="mode-btn" data-style="friend">🤙 友達</button>
                 <button class="mode-btn" data-style="exam">📋 試験向け</button>
             </div>
         </div>
@@ -393,7 +392,7 @@
             <span class="mode-label">深さ</span>
             <div class="mode-btns">
                 <button class="mode-btn" data-depth="easy">🟢 やさしく</button>
-                <button class="mode-btn mode-active" data-depth="normal">🟡 ふつう</button>
+                <button class="mode-btn" data-depth="normal">🟡 ふつう</button>
                 <button class="mode-btn" data-depth="deep">🔴 深く</button>
             </div>
         </div>
@@ -403,6 +402,14 @@
                 <input type="checkbox" id="autoAnalyzeTog" checked>
                 <span class="toggle-slider"></span>
             </label>
+        </div>
+        <div class="mode-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                <span class="mode-label">バブル滞在時間</span>
+                <span id="bubbleDurLabel" style="font-family:var(--fm);font-size:10px;color:var(--ac);font-weight:600">5秒</span>
+            </div>
+            <input type="range" id="bubbleDurSlider" min="2" max="10" step="1" value="5"
+                style="width:100%;accent-color:var(--ac);cursor:pointer">
         </div>
     </div>
 </div>
