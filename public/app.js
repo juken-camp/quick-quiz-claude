@@ -1,5 +1,5 @@
 /* =============================================================
-   QUIK QUIZ AI — app.js
+   QUICK QUIZ AI — app.js
    ============================================================= */
 
 // ---- Sound ----
@@ -414,16 +414,10 @@ function renderQuickChips() {
 
 // ---- テキスト改行変換 ----
 function formatBubbleText(text) {
-    // 
-
- → 段落スペース、
- → 改行
+    // \n\n → 段落スペース、\n → 改行
     return text
-        .replace(/
-
-+/g, '<br><br>')
-        .replace(/
-/g, '<br>');
+        .replace(/\n\n+/g, '<br><br>')
+        .replace(/\n/g, '<br>');
 }
 
 // ---- 浮遊バブル表示 ----
