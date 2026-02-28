@@ -443,14 +443,28 @@ function spawnBubble(text, type = 'ai') {
     el.className = `float-bubble ${type}`;
     el.innerHTML = type === 'user' ? text : formatBubbleText(text);
     el.style.bottom = '90px';
+    el.style.pointerEvents = 'auto';
+    el.style.cursor = 'pointer';
     document.body.appendChild(el);
+
+    // クリック／タップで即消去
+    function dismissBubble() {
+        el.style.transition = 'opacity .2s, transform .2s';
+        el.style.opacity = '0';
+        el.style.transform = 'scale(.92)';
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 200);
+        const idx = activeBubbles.indexOf(el);
+        if (idx > -1) activeBubbles.splice(idx, 1);
+    }
+    el.addEventListener('click', dismissBubble);
+    el.addEventListener('touchend', e => { e.preventDefault(); dismissBubble(); });
 
     if (isInfinite) {
         // 無制限：アニメ後に消えないよう固定表示
         el.style.animation = 'bubbleIn .3s cubic-bezier(.22,1,.36,1) forwards';
         activeBubbles.push(el);
     } else {
-        el.addEventListener('animationend', () => el.remove());
+        el.addEventListener('animationend', () => { if (el.parentNode) el.remove(); });
     }
 }
 
