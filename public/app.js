@@ -146,14 +146,10 @@ let aiMode = {
 };
 
 function loadAiMode() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('aiMode') || 'null');
-        if (saved) aiMode = { ...aiMode, ...saved };
-    } catch(e) {}
+    // 毎回デフォルト（友達・ふつう）でリセット
+    aiMode = { style: 'friend', depth: 'normal', autoAnalyze: true };
 }
-function saveAiMode() {
-    try { localStorage.setItem('aiMode', JSON.stringify(aiMode)); } catch(e) {}
-}
+function saveAiMode() { /* localStorageは使わない */ }
 
 const aiStylePrompt = {
     teacher: 'やや丁寧な先生口調で話してください（「〜ですよ」「〜ですね」）。わかりやすく体系立てて説明してください。',
@@ -278,6 +274,13 @@ function initCats() {
     });
 }
 
+function clearSel() {
+    sel = [];
+    document.querySelectorAll('.cat-item.active').forEach(b => b.classList.remove('active'));
+    // 決定ボタンも無効化
+    document.querySelectorAll('[id^="start"][id$="Quiz"]').forEach(b => b.disabled = true);
+}
+
 function togCat(subj, id, btn) {
     sfx.click(); btn.classList.toggle('active');
     const i = sel.indexOf(id);
@@ -374,6 +377,19 @@ function showQuizUI(q) {
     show('quizModal');
 }
 
+// ---- ヘッダーステータス更新 ----
+let statusTimer = null;
+function showStatus(text, type = '') {
+    const el = document.getElementById('chatStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'chat-status show' + (type ? ' ' + type : '');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => {
+        el.classList.remove('show');
+    }, 6000);
+}
+
 // ---- AI リアクション（正解・不正解に短く反応） ----
 async function sendReaction(q, chosenTxt, correctText, isCorrect) {
     const box = document.getElementById('chatMs');
@@ -398,7 +414,10 @@ async function sendReaction(q, chosenTxt, correctText, isCorrect) {
             })
         });
         const d = await r.json();
-        tb.innerHTML = d.reply || '👍';
+        const replyText = d.reply || (isCorrect ? '👍' : '💪');
+        tb.innerHTML = replyText;
+        // ヘッダーのステータスバーにも同じひとことを表示
+        showStatus(replyText, isCorrect ? 'ok' : 'ng');
     } catch(e) { tb.remove(); }
     box.scrollTop = box.scrollHeight;
 }
@@ -548,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Category (sub-subject) buttons
     document.querySelectorAll('[data-category]').forEach(b => {
         b.addEventListener('click', () => {
-            sfx.click(); sel = [];
+            sfx.click(); clearSel();
             const cat = b.dataset.category;
             const mid = cat.split('_').map((w, i) => i ? w[0].toUpperCase() + w.slice(1) : w).join('') + 'Modal';
             show(mid);
@@ -588,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // FAB: back
     document.getElementById('fabBack').addEventListener('click', () => {
-        sfx.click(); sel = []; seqIdx = 0; used = [];
+        sfx.click(); clearSel(); seqIdx = 0; used = [];
         document.getElementById('gameScreen').classList.add('hidden');
         document.getElementById('mainScreen').classList.remove('hidden');
         hideAll();
