@@ -372,6 +372,7 @@ function showQuizUI(q) {
                 rs.className = 'quiz-res ng';
             }
             updateChips();
+            renderQuickChips();
         };
         od.appendChild(b);
     });
@@ -379,6 +380,38 @@ function showQuizUI(q) {
     nb.onclick = () => { sfx.click(); openQuiz(); };
     document.getElementById('quizBack').onclick = () => { sfx.click(); hideAll(); };
     show('quizModal');
+}
+
+// ---- クイックチップ ----
+const defaultChips = ['教えて', 'どう覚える？', 'テストで出る？', 'もっと詳しく'];
+
+function renderQuickChips() {
+    const el = document.getElementById('quickChips');
+    if (!el) return;
+    el.innerHTML = '';
+
+    const chips = curQuiz
+        ? [
+            '教えて',
+            '「' + curQuiz.opts[curQuiz.ans] + '」って何？',
+            'どう覚える？',
+            'テストで出る？',
+            '間違えた理由は？'
+          ]
+        : defaultChips;
+
+    chips.forEach(text => {
+        const b = document.createElement('button');
+        b.className = 'qchip';
+        b.textContent = text;
+        b.onclick = () => {
+            sendChat(text);
+        };
+        el.appendChild(b);
+    });
+
+    // 少し遅らせて表示（ページ読み込み直後の飛び出しを防ぐ）
+    requestAnimationFrame(() => el.classList.add('visible'));
 }
 
 // ---- 浮遊バブル表示 ----
@@ -599,6 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 起動時の待機バブル
     setTimeout(() => spawnBubble('👋 問題を解いているときはそばにいます！<br>気になったことがあれば何でも聞いてね。', 'ai'), 800);
+    renderQuickChips();
 
     // Subject buttons
     document.querySelectorAll('[data-subject]').forEach(b => {
