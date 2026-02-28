@@ -19,6 +19,12 @@ class SFX {
     ok() { this.t(523, 0.1); setTimeout(() => this.t(659, 0.1), 100); setTimeout(() => this.t(784, 0.12), 200); }
     ng() { this.t(200, 0.2, 0.15, 'sawtooth'); }
     go() { [523, 587, 659, 784].forEach((f, i) => setTimeout(() => this.t(f, 0.1), i * 80)); }
+    pop() {
+        // パン！= 短い高音 + ノイズ感
+        this.t(880, 0.04, 0.12, 'square');
+        setTimeout(() => this.t(1200, 0.03, 0.06, 'sine'), 30);
+        setTimeout(() => this.t(600, 0.04, 0.04, 'sawtooth'), 55);
+    }
 }
 const sfx = new SFX();
 document.addEventListener('click', () => { if (sfx.c?.state === 'suspended') sfx.c.resume(); }, { once: true });
@@ -462,22 +468,28 @@ function spawnBubble(text, type = 'ai') {
     const el = document.createElement('div');
     el.className = `float-bubble ${type}`;
     el.innerHTML = type === 'user' ? text : formatBubbleText(text);
-    el.style.bottom = '90px';
+    el.style.bottom = '100px';
     el.style.pointerEvents = 'auto';
     el.style.cursor = 'pointer';
     document.body.appendChild(el);
 
-    // クリック／タップで即消去
+    // クリック／タップで即消去（ポップ！）
     function dismissBubble() {
-        el.style.transition = 'opacity .2s, transform .2s';
-        el.style.opacity = '0';
-        el.style.transform = 'scale(.92)';
-        setTimeout(() => { if (el.parentNode) el.remove(); }, 200);
+        // 二重発火防止
+        el.removeEventListener('click', dismissBubble);
+        el.removeEventListener('touchend', touchDismiss);
+        // パン！効果音
+        sfx.pop();
+        // ポップアニメ
+        el.style.animation = 'bubblePop .32s cubic-bezier(.22,1,.36,1) forwards';
+        el.style.pointerEvents = 'none';
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 320);
         const idx = activeBubbles.indexOf(el);
         if (idx > -1) activeBubbles.splice(idx, 1);
     }
+    function touchDismiss(e) { e.preventDefault(); dismissBubble(); }
     el.addEventListener('click', dismissBubble);
-    el.addEventListener('touchend', e => { e.preventDefault(); dismissBubble(); });
+    el.addEventListener('touchend', touchDismiss);
 
     if (isInfinite) {
         // 無制限：アニメ後に消えないよう固定表示
@@ -521,7 +533,7 @@ async function sendReaction(q, chosenTxt, correctText, isCorrect) {
     // タイピングバブル（仮）
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai' + (isCorrect ? ' ok' : ' ng');
-    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:0;right:16px;transition:opacity .15s';
+    typingBubble.style.cssText = 'animation:none;bottom:100px;opacity:0;right:16px;transition:opacity .2s;z-index:496';
     typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
     document.body.appendChild(typingBubble);
     requestAnimationFrame(() => { typingBubble.style.opacity = '1'; });
@@ -620,7 +632,7 @@ async function sendChat(message, isAuto = false) {
     // タイピングバブル（固定・アニメなし）
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai';
-    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:0;right:16px;transition:opacity .15s';
+    typingBubble.style.cssText = 'animation:none;bottom:100px;opacity:0;right:16px;transition:opacity .2s;z-index:496';
     typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
     document.body.appendChild(typingBubble);
     requestAnimationFrame(() => { typingBubble.style.opacity = '1'; });
