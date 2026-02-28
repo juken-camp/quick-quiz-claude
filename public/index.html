@@ -132,18 +132,28 @@
 
         /* ===== AI先生チャット（常時固定表示） ===== */
         .chat-pn{position:fixed;bottom:0;left:0;right:0;z-index:300;
-            background:var(--wh);border-top:2px solid var(--ac);
-            box-shadow:0 -8px 40px rgba(108,99,255,.18);
+            background:var(--wh);
+            box-shadow:0 -4px 32px rgba(108,99,255,.15);
             display:flex;flex-direction:column;
-            height:220px;min-height:56px;max-height:85vh}
-        .chat-drag{height:20px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;
-            flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none}
-        .chat-drag-bar{width:40px;height:4px;background:var(--ln);border-radius:4px;transition:background .15s}
-        .chat-pn:hover .chat-drag-bar,.chat-drag:active .chat-drag-bar{background:var(--ac2)}
-        .chat-spacer{height:230px} /* コンテンツ下部の余白 */
+            height:220px;min-height:56px;max-height:85vh;
+            will-change:height}
+        /* 波形上端 */
+        .chat-wave{position:absolute;top:-18px;left:0;right:0;height:20px;pointer-events:none;overflow:hidden;line-height:0}
+        .chat-wave svg{width:100%;height:20px;display:block}
+        .chat-wave-path{fill:var(--wh);filter:drop-shadow(0 -3px 8px rgba(108,99,255,.12))}
+        /* ドラッグハンドル */
+        .chat-drag{height:22px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;
+            background:transparent;position:relative;z-index:1}
+        .chat-drag-bar{width:36px;height:3px;border-radius:3px;
+            background:linear-gradient(90deg,var(--ac2),var(--ac));
+            opacity:.4;transition:opacity .2s,width .2s;animation:dragpulse 3s ease-in-out infinite}
+        @keyframes dragpulse{0%,100%{width:36px;opacity:.35}50%{width:52px;opacity:.7}}
+        .chat-drag:hover .chat-drag-bar,.chat-drag:active .chat-drag-bar{opacity:1;animation:none;width:52px}
+        .chat-spacer{height:230px}
         /* ヘッダー */
         .chat-hd{display:flex;align-items:center;justify-content:space-between;
-            padding:0 16px 8px;flex-shrink:0;gap:8px}
+            padding:0 16px 6px;flex-shrink:0;gap:8px}
         .chat-tt{font-family:var(--fd);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;flex:1}
         .chat-tt::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ac);
             box-shadow:0 0 8px var(--ac);animation:pulse 2s infinite;flex-shrink:0}
@@ -176,6 +186,11 @@
         .chat-m.u{background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--wh);
             align-self:flex-end;border-bottom-right-radius:3px;box-shadow:var(--glow)}
         .chat-m.a{background:var(--ft);color:var(--dk);align-self:flex-start;border-bottom-left-radius:3px;border:1px solid var(--ln)}
+        /* 待機中メッセージ：フローティング */
+        .chat-m.standby{background:linear-gradient(135deg,rgba(108,99,255,.06),rgba(157,151,255,.08));
+            border:1px dashed var(--ac2);color:var(--mid);font-size:12px;
+            animation:floatmsg 4s ease-in-out infinite;align-self:center;text-align:center;max-width:92%}
+        @keyframes floatmsg{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
         .chat-m.react{background:linear-gradient(135deg,#f0efff,#e8f8f0);border-color:var(--ac2);font-size:12px;color:#555;padding:5px 11px;font-style:italic}
         .chat-m.a strong{font-weight:600;color:var(--ac)}.chat-m.a p{margin:4px 0}
         .chat-m.a ul,.chat-m.a ol{padding-left:16px;margin:4px 0}
@@ -345,6 +360,12 @@
 
 <!-- AI先生チャット（常時表示） -->
 <div class="chat-pn" id="chatPn">
+    <!-- 波形上端 -->
+    <div class="chat-wave" aria-hidden="true">
+        <svg viewBox="0 0 390 20" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="chat-wave-path" d="M0,20 L0,12 Q32,2 65,10 Q97,18 130,10 Q163,2 195,10 Q227,18 260,10 Q293,2 325,10 Q357,18 390,10 L390,20 Z"/>
+        </svg>
+    </div>
     <!-- ドラッグハンドル -->
     <div class="chat-drag" id="chatDrag"><div class="chat-drag-bar"></div></div>
     <!-- ヘッダー -->
@@ -381,7 +402,7 @@
         </div>
     </div>
     <div class="chat-ms" id="chatMs">
-        <div class="chat-m a react">👋 問題を解いたら反応するよ！気になったことがあれば何でも聞いてね。</div>
+        <div class="chat-m standby">👋 問題を解いているときはそばにいます！<br>気になったことがあれば何でも聞いてね。</div>
     </div>
     <div class="chips" id="chips"></div>
     <div class="chat-ia">
