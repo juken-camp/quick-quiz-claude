@@ -228,7 +228,11 @@ function hideAll() {
     document.getElementById('quizModal').classList.remove('show');
 }
 
-function show(id) { hideAll(); clearSel(); document.getElementById(id).classList.add('show'); }
+function show(id) {
+    hideAll();
+    if (id !== 'quizModal') clearSel();
+    document.getElementById(id).classList.add('show');
+}
 function goBackToMain() { hideAll(); sfx.click(); }
 function goBackToSocial() { show('socialModal'); sfx.click(); }
 function goBackToScience() { show('scienceModal'); sfx.click(); }
