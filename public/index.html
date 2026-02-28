@@ -19,7 +19,8 @@
             --shadow-md:0 8px 32px rgba(13,13,15,.12);
         }
         body{font-family:var(--fb);background:#f7f7fb;color:var(--bk);min-height:100vh;
-            -webkit-user-select:none;user-select:none;touch-action:manipulation;overflow-x:hidden}
+            -webkit-user-select:none;user-select:none;touch-action:manipulation;overflow-x:hidden;
+            -webkit-tap-highlight-color:transparent}
 
         .shell{max-width:480px;margin:0 auto;padding:0 18px;min-height:100vh}
         .header{padding:24px 0 8px;position:relative}
@@ -48,6 +49,9 @@
             width:100%;text-align:left;font-family:var(--fb);color:var(--bk)}
         .subj-item:hover{border-color:var(--ac);box-shadow:var(--glow),var(--shadow-md);transform:translateY(-1px)}
         .subj-item:active{transform:translateY(0);opacity:.85}
+        .subj-item:focus,.subj-item:focus-visible{outline:none;border-color:transparent}
+        button:focus{outline:none} button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+        .subj-item:focus:not(:focus-visible){border-color:transparent;box-shadow:var(--shadow-sm);transform:none}
         .subj-icon{width:38px;height:38px;border-radius:10px;
             background:linear-gradient(135deg,var(--ac-bg),var(--ft));
             display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all .2s}
@@ -131,11 +135,11 @@
         .quiz-acts .btn{flex:1;text-align:center;padding:11px 16px;font-size:13px}
 
         /* ===== AI先生バー（固定1行） ===== */
-        .ai-bar{position:fixed;bottom:0;left:0;right:0;z-index:300;
-            background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+        .ai-bar{position:fixed;bottom:0;left:0;right:0;z-index:500;
+            background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
             border-top:1.5px solid rgba(108,99,255,.2);
             box-shadow:0 -2px 20px rgba(108,99,255,.1);
-            display:flex;align-items:center;gap:8px;padding:8px 14px 12px;
+            display:flex!important;align-items:center;gap:8px;padding:8px 14px 12px;
             padding-bottom:max(12px,env(safe-area-inset-bottom))}
         .ai-bar-label{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--ac);
             white-space:nowrap;display:flex;align-items:center;gap:5px}
@@ -189,7 +193,7 @@
             100%{opacity:0;bottom:200px;transform:scale(.97);transform-origin:right bottom}}
 
         /* ===== 設定オーバーレイ ===== */
-        .setting-ov{display:none;position:fixed;inset:0;z-index:400;
+        .setting-ov{display:none;position:fixed;inset:0;z-index:600;
             background:rgba(13,13,15,.4);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
         .setting-ov.show{display:flex;animation:fi .2s}
         .setting-box{background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;
@@ -217,7 +221,7 @@
         .toggle-wrap input:checked+.toggle-slider::before{transform:translateX(18px)}
 
         /* ===== 履歴オーバーレイ ===== */
-        .hist-ov{display:none;position:fixed;inset:0;z-index:400;
+        .hist-ov{display:none;position:fixed;inset:0;z-index:600;
             background:rgba(13,13,15,.5);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center}
         .hist-ov.show{display:flex;animation:fi .2s}
         .hist-box{background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;
@@ -242,7 +246,7 @@
         .hist-empty{color:var(--soft);font-size:13px;text-align:center;padding:40px 0}
 
         /* ===== クイックチップ ===== */
-        .quick-chips{position:fixed;bottom:56px;left:0;right:0;z-index:295;
+        .quick-chips{position:fixed;bottom:56px;left:0;right:0;z-index:495;
             display:flex;gap:6px;padding:6px 12px;overflow-x:auto;
             scrollbar-width:none;-ms-overflow-style:none;
             pointer-events:none;opacity:0;transform:translateY(6px);
@@ -328,7 +332,7 @@
     <!-- GAME SCREEN -->
     <div id="gameScreen" class="screen hidden">
         <div class="header">
-            <div class="header-logo" id="logoGame" onclick="sfx&&sfx.click();sel=[];seqIdx=0;used=[];document.getElementById('gameScreen').classList.add('hidden');document.getElementById('mainScreen').classList.remove('hidden');hideAll&&hideAll();">Quick Quiz<span class="ai">AI</span></div>
+            <div class="header-logo" id="logoGame" onclick="goBackFromGame()">Quick Quiz<span class="ai">AI</span></div>
             <div class="header-sub">JUKEN CAMP × AI</div>
             <div class="header-line"></div>
         </div>
@@ -340,7 +344,7 @@
         </div>
         <div class="label">Mode</div>
         <div class="mode-row">
-            <button id="randomModeBtn" class="mode-btn active">🎲 ランダム</button>
+            <button id="randomModeBtn" class="mode-btn mode-active">🎲 ランダム</button>
             <button id="sequentialModeBtn" class="mode-btn">📋 順番通り</button>
         </div>
         <button id="startQuizButton" class="btn btn-bk btn-full" style="margin-top:16px">スタート →</button>
