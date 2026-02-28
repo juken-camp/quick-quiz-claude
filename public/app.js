@@ -419,7 +419,11 @@ async function sendReaction(q, chosenTxt, correctText, isCorrect) {
     // タイピングバブル（仮）
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai' + (isCorrect ? ' ok' : ' ng');
-    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:1;right:16px;width:min(400px,calc(100vw - 32px))'; = isCorrect
+    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:1;right:16px';
+    typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    document.body.appendChild(typingBubble);
+
+    const reactionPrompt = isCorrect
         ? `生徒が「${q.q}」に正解した。一言だけ短く褒めて。絵文字1つ使って15字以内。`
         : `生徒が「${q.q}」を「${chosenTxt}」と間違えた（正解:${correctText}）。一言だけ短く励まして。絵文字1つ使って20字以内。`;
 
@@ -513,7 +517,7 @@ async function sendChat(message, isAuto = false) {
     // タイピングバブル（固定・アニメなし）
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai';
-    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:1;right:16px;width:min(400px,calc(100vw - 32px))';
+    typingBubble.style.cssText = 'animation:none;bottom:72px;opacity:1;right:16px';
     typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
     document.body.appendChild(typingBubble);
 
@@ -542,12 +546,6 @@ async function sendChat(message, isAuto = false) {
 
 // ---- モードUI初期化 ----
 function initModeUI() {
-    // 初期状態を反映
-    const defStyleBtn = document.querySelector(`[data-style="${aiMode.style}"]`);
-    if (defStyleBtn) defStyleBtn.classList.add('mode-active');
-    const defDepthBtn = document.querySelector(`[data-depth="${aiMode.depth}"]`);
-    if (defDepthBtn) defDepthBtn.classList.add('mode-active');
-
     document.querySelectorAll('[data-style]').forEach(btn => {
         btn.addEventListener('click', () => {
             aiMode.style = btn.dataset.style;
@@ -569,14 +567,15 @@ function initModeUI() {
         tog.addEventListener('change', () => { aiMode.autoAnalyze = tog.checked; });
     }
 
-    // バブル滞在時間スライダー
+    // バブル表示時間スライダー
     const slider = document.getElementById('bubbleDurSlider');
-    const sliderLabel = document.getElementById('bubbleDurLabel');
-    if (slider && sliderLabel) {
+    const durLabel = document.getElementById('bubbleDurLabel');
+    if (slider && durLabel) {
         slider.addEventListener('input', () => {
-            const sec = slider.value;
-            sliderLabel.textContent = sec + '秒';
-            document.documentElement.style.setProperty('--bubble-duration', sec + 's');
+            const val = parseInt(slider.value);
+            durLabel.textContent = val + '秒';
+            document.documentElement.style.setProperty('--bubble-duration', val + 's');
+            sfx.click();
         });
     }
 }
@@ -638,6 +637,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('randomModeBtn').classList.remove('active');
     });
 
+    // FAB: back
+    document.getElementById('fabBack').addEventListener('click', () => {
+        sfx.click(); clearSel(); seqIdx = 0; used = [];
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('mainScreen').classList.remove('hidden');
+        hideAll();
+    });
 
     // 入力欄の変化でsendボタン有効化
     document.getElementById('chatIn').addEventListener('input', e => {
