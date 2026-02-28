@@ -226,8 +226,6 @@ function toast(t) {
 function hideAll() {
     document.querySelectorAll('.overlay').forEach(m => m.classList.remove('show'));
     document.getElementById('quizModal').classList.remove('show');
-    curQuiz = null;
-    renderQuickChips(); // チップを非表示に
     // AI先生バーを常時表示
     const bar = document.getElementById('aiBar');
     if (bar) { bar.style.display = 'flex'; bar.style.visibility = 'visible'; bar.style.opacity = '1'; }
@@ -238,10 +236,11 @@ function show(id) {
     if (id !== 'quizModal') clearSel();
     document.getElementById(id).classList.add('show');
 }
-function goBackToMain() { hideAll(); clearSel(); sel = []; seqIdx = 0; used = []; sfx.click(); }
+function goBackToMain() { curQuiz = null; renderQuickChips(); hideAll(); clearSel(); sel = []; seqIdx = 0; used = []; sfx.click(); }
 function goBackFromGame() {
     sfx.click();
     clearSel(); sel = []; seqIdx = 0; used = [];
+    curQuiz = null; renderQuickChips();
     hideAll();
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('mainScreen').classList.remove('hidden');
@@ -398,7 +397,7 @@ function showQuizUI(q) {
     });
 
     nb.onclick = () => { sfx.click(); openQuiz(); };
-    document.getElementById('quizBack').onclick = () => { sfx.click(); clearSel(); hideAll(); };
+    document.getElementById('quizBack').onclick = () => { sfx.click(); clearSel(); curQuiz = null; renderQuickChips(); hideAll(); };
     show('quizModal');
 }
 
