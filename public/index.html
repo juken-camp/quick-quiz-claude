@@ -170,7 +170,7 @@
             max-width:min(480px,calc(100vw - 32px));padding:10px 18px 10px 14px;border-radius:18px;
             font-size:13px;line-height:1.6;font-family:var(--fb);
             pointer-events:auto;text-align:left;cursor:pointer;
-            animation:bubbleFloat var(--bubble-duration,30s) cubic-bezier(.22,1,.36,1) forwards}
+            animation:bubbleFloat var(--bubble-duration,30s) linear forwards}
         @media(hover:hover){.float-bubble:hover{filter:brightness(.95);transform-origin:right bottom}}
         .float-bubble::after{content:"✕";position:absolute;top:6px;right:9px;
             font-size:9px;color:var(--mid);opacity:0;transition:opacity .15s;font-family:var(--fm)}
@@ -190,8 +190,8 @@
             100%{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes bubbleFloat{
             0%  {opacity:0;bottom:100px;transform:translateY(10px) scale(.95);transform-origin:right bottom}
-            12% {opacity:1;transform:translateY(0) scale(1)}
-            75% {opacity:1}
+            5%  {opacity:1;transform:translateY(0) scale(1)}
+            88% {opacity:1}
             100%{opacity:0;bottom:220px;transform:scale(1)}}
 
         /* ===== 設定オーバーレイ ===== */
