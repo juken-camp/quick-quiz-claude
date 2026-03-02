@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initModeUI();
 
     // 起動時の待機バブル
-    setTimeout(() => spawnBubble('👋 問題を解いているときはそばにいます！<br>気になったことがあれば何でも聞いてね。', 'ai'), 800);
+    // 起動時の待機バブルは表示しない
     renderQuickChips();
 
     // Subject buttons
