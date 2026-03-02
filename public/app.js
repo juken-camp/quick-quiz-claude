@@ -706,12 +706,14 @@ const fallbackOk = ['👍 よくできました！', '🎯 完璧！', '✨ さ�
 const fallbackNg = ['💪 次は大丈夫！', '🤔 惜しかった！', '😤 次こそ！', '🔥 ドンマイ！', '👊 負けるな！'];
 
 async function sendReaction(q, chosenTxt, correctText, isCorrect) {
-    // タイピングバブル（仮）
+    // タイピングバブル（仮）— activeBubblesに登録してスペース確保
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai' + (isCorrect ? ' ok' : ' ng');
-    typingBubble.style.cssText = 'animation:none;bottom:100px;opacity:0;right:16px;transition:opacity .2s;z-index:496';
+    typingBubble.style.cssText = 'animation:none;opacity:0;right:16px;transition:opacity .2s, bottom .25s cubic-bezier(.22,1,.36,1);z-index:496';
     typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
     document.body.appendChild(typingBubble);
+    activeBubbles.push(typingBubble);
+    repositionBubbles();
     requestAnimationFrame(() => { typingBubble.style.opacity = '1'; });
 
     const reactionPrompt = isCorrect
@@ -732,10 +734,14 @@ async function sendReaction(q, chosenTxt, correctText, isCorrect) {
         const d = await r.json();
         const fb = isCorrect ? fallbackOk : fallbackNg;
         const replyText = d.reply || fb[Math.floor(Math.random() * fb.length)];
+        const tIdx = activeBubbles.indexOf(typingBubble);
+        if (tIdx > -1) activeBubbles.splice(tIdx, 1);
         typingBubble.remove();
         spawnBubble(replyText, 'ai' + (isCorrect ? ' ok' : ' ng'));
         addToHistory('ai', replyText);
     } catch(e) {
+        const tIdx = activeBubbles.indexOf(typingBubble);
+        if (tIdx > -1) activeBubbles.splice(tIdx, 1);
         typingBubble.remove();
         const fb = isCorrect ? fallbackOk : fallbackNg;
         spawnBubble(fb[Math.floor(Math.random() * fb.length)], 'ai' + (isCorrect ? ' ok' : ' ng'));
@@ -805,12 +811,14 @@ async function sendChat(message, isAuto = false) {
     spawnBubble(displayText, 'user');
     addToHistory('user', displayText);
 
-    // タイピングバブル（固定・アニメなし）
+    // タイピングバブル（固定・アニメなし）— activeBubblesに登録してスペース確保
     const typingBubble = document.createElement('div');
     typingBubble.className = 'float-bubble ai';
-    typingBubble.style.cssText = 'animation:none;bottom:100px;opacity:0;right:16px;transition:opacity .2s;z-index:496';
+    typingBubble.style.cssText = 'animation:none;opacity:0;right:16px;transition:opacity .2s, bottom .25s cubic-bezier(.22,1,.36,1);z-index:496';
     typingBubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
     document.body.appendChild(typingBubble);
+    activeBubbles.push(typingBubble);
+    repositionBubbles();
     requestAnimationFrame(() => { typingBubble.style.opacity = '1'; });
 
     chatHistory.push({ role: 'user', content: message });
@@ -824,12 +832,16 @@ async function sendChat(message, isAuto = false) {
         });
         const d = await r.json();
         const replyText = d.reply || d.error || 'エラーが発生しました';
+        const tIdx = activeBubbles.indexOf(typingBubble);
+        if (tIdx > -1) activeBubbles.splice(tIdx, 1);
         typingBubble.remove();
         spawnBubble(replyText, 'ai');
         addToHistory('ai', replyText);
         chatHistory.push({ role: 'assistant', content: replyText });
         if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
     } catch (e) {
+        const tIdx = activeBubbles.indexOf(typingBubble);
+        if (tIdx > -1) activeBubbles.splice(tIdx, 1);
         typingBubble.remove();
         spawnBubble('通信エラーが発生しました。', 'ai');
     }
