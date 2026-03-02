@@ -169,7 +169,7 @@
         .float-bubble{position:fixed;right:16px;z-index:290;
             max-width:min(480px,calc(100vw - 32px));padding:10px 18px 10px 14px;border-radius:18px;
             font-size:13px;line-height:1.6;font-family:var(--fb);
-            pointer-events:auto;text-align:left;cursor:pointer;
+            pointer-events:auto;text-align:left;cursor:pointer;touch-action:none;
             animation:bubbleFloat var(--bubble-duration,30s) ease-out forwards}
         @media(hover:hover){.float-bubble:hover{filter:brightness(.95);transform-origin:right bottom}}
         .float-bubble::after{content:"✕";position:absolute;top:6px;right:9px;
