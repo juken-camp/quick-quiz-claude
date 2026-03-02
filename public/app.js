@@ -593,11 +593,12 @@ function formatBubbleText(text) {
 
 // ---- 浮遊バブル表示 ----
 let activeBubbles = []; // 表示中バブルを管理（重なり防止）
+let bubbleOffset = 0;   // バブル群全体の縦方向オフセット（スワイプで変化）
 
 function removeBubble(el, fade = false) {
     el.style.pointerEvents = 'none';
-    el.removeEventListener('click', el._dismiss);
-    el.removeEventListener('touchend', el._touchDismiss);
+    if (el._dismiss) el.removeEventListener('click', el._dismiss);
+    if (el._touchDismiss) el.removeEventListener('touchend', el._touchDismiss);
     const idx = activeBubbles.indexOf(el);
     if (idx > -1) activeBubbles.splice(idx, 1);
     if (fade) {
@@ -608,16 +609,15 @@ function removeBubble(el, fade = false) {
     } else {
         if (el.parentNode) el.remove();
     }
-    // 残ったバブルの位置を詰める
+    // バブルがなくなったらオフセットもリセット
+    if (activeBubbles.length === 0) bubbleOffset = 0;
     repositionBubbles();
 }
 
 function repositionBubbles() {
-    // 下から積み上げ：各バブルの高さを測って隙間なく並べる
-    const BASE = 100; // ai-bar + チップの上
+    const BASE = 100;
     const GAP = 8;
-    let nextBottom = BASE;
-    // 古い順（配列の先頭が最初に出たもの）から上に積む
+    let nextBottom = BASE + bubbleOffset;
     activeBubbles.forEach(b => {
         b.style.transition = 'bottom .25s cubic-bezier(.22,1,.36,1)';
         b.style.bottom = nextBottom + 'px';
@@ -625,19 +625,104 @@ function repositionBubbles() {
     });
 }
 
+/* --- バブルのスワイプ／タップ判定 --- */
+const SWIPE_THRESHOLD = 6; // px: これ以上動いたらスワイプと判定
+
+function attachBubbleGestures(el) {
+    let startY = 0, startTime = 0, moved = false, swiping = false;
+    let lastY = 0, velocity = 0, lastTime = 0;
+
+    function onStart(e) {
+        const t = e.touches ? e.touches[0] : e;
+        startY = t.clientY;
+        lastY = t.clientY;
+        startTime = Date.now();
+        lastTime = startTime;
+        moved = false;
+        swiping = false;
+        velocity = 0;
+    }
+
+    function onMove(e) {
+        const t = e.touches ? e.touches[0] : e;
+        const dy = Math.abs(startY - t.clientY);
+        const now = Date.now();
+
+        if (!swiping && dy > SWIPE_THRESHOLD) {
+            swiping = true;
+        }
+
+        if (swiping) {
+            e.preventDefault();
+            // 速度計算（慣性用）
+            const dt = now - lastTime;
+            if (dt > 0) velocity = (lastY - t.clientY) / dt; // 上方向が正
+            // 前フレームとの差分でオフセットを更新
+            const frameDy = lastY - t.clientY;
+            bubbleOffset += frameDy;
+            lastY = t.clientY;
+            lastTime = now;
+
+            // 全バブルを即座に追従させる（transitionなし）
+            const BASE = 100;
+            const GAP = 8;
+            let nextBottom = BASE + bubbleOffset;
+            activeBubbles.forEach(b => {
+                b.style.transition = 'none';
+                b.style.bottom = nextBottom + 'px';
+                nextBottom += b.offsetHeight + GAP;
+            });
+        }
+    }
+
+    function onEnd(e) {
+        if (swiping) {
+            // スワイプ終了：慣性スクロール
+            const inertia = velocity * 120; // 慣性量
+            bubbleOffset = bubbleOffset + inertia;
+            // 下限：BASE以下には下げない（バブルが画面外に消えないように）
+            // ただし下方向へのスワイプは許可（上が切れてるのを見るため）
+            repositionBubbles();
+            // 元の startY をリセット
+            startY = 0;
+        } else {
+            // タップ判定 → 消す
+            sfx.pop();
+            removeBubble(el, true);
+        }
+    }
+
+    // タッチイベント
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+
+    // マウスイベント（PC対応）
+    el.addEventListener('mousedown', (e) => {
+        onStart(e);
+        const onMouseMove = (ev) => onMove(ev);
+        const onMouseUp = (ev) => {
+            onEnd(ev);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+}
+
 function spawnBubble(text, type = 'ai') {
     const isInfinite = document.getElementById('bubbleInfinite')?.checked;
 
     if (isInfinite) {
-        // 無制限：古いバブルを半透明に
         activeBubbles.forEach(b => {
             b.style.transition = 'opacity .4s';
             b.style.opacity = '0.2';
             setTimeout(() => { if (b.parentNode) b.remove(); }, 4000);
         });
         activeBubbles = [];
+        bubbleOffset = 0;
     } else {
-        // 通常：古いバブルが残っていたら消す（重なり防止）
         while (activeBubbles.length > 2) {
             const old = activeBubbles.shift();
             removeBubble(old, true);
@@ -647,31 +732,24 @@ function spawnBubble(text, type = 'ai') {
     const el = document.createElement('div');
     el.className = `float-bubble ${type}`;
     el.innerHTML = type === 'user' ? text : formatBubbleText(text);
-    // 初期位置（repositionBubblesで正しく配置される前の仮位置）
     el.style.bottom = '100px';
     el.style.pointerEvents = 'auto';
     el.style.cursor = 'pointer';
     document.body.appendChild(el);
     activeBubbles.push(el);
 
-    // 全バブルの位置を再計算（重なり防止）
+    // 新しいバブルが来たらオフセットリセット（最新を見せる）
+    bubbleOffset = 0;
     repositionBubbles();
 
-    // タップで消去（効果音 + フェードアウト）
-    function dismissBubble() {
-        sfx.pop();
-        removeBubble(el, true);
-    }
-    function touchDismiss(e) { e.preventDefault(); dismissBubble(); }
-    el._dismiss = dismissBubble;
-    el._touchDismiss = touchDismiss;
-    el.addEventListener('click', dismissBubble);
-    el.addEventListener('touchend', touchDismiss);
+    // スワイプ/タップのジェスチャーを設定（click/touchendの直接登録は不要）
+    attachBubbleGestures(el);
+    // removeBubble互換のため _dismiss を保持
+    el._dismiss = () => { sfx.pop(); removeBubble(el, true); };
 
     if (isInfinite) {
         el.style.animation = 'bubbleIn .3s cubic-bezier(.22,1,.36,1) forwards';
     } else {
-        // 時間が来たら自動フェードアウト
         el.addEventListener('animationend', () => removeBubble(el, true));
     }
 }
