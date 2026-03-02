@@ -690,6 +690,354 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ===== 🔊 Sound System ===== */
+(function(){
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let ctx = null;
+
+    function getCtx(){
+        if(!ctx) ctx = new AudioCtx();
+        if(ctx.state === 'suspended') ctx.resume();
+        return ctx;
+    }
+
+    function play(type, opts={}){
+        try{
+            const c = getCtx();
+            const g = c.createGain();
+            g.connect(c.destination);
+            const vol = opts.vol ?? 0.18;
+            g.gain.setValueAtTime(vol, c.currentTime);
+
+            if(type === 'tick'){
+                // タイマースピナー・周回ボタン
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(opts.freq ?? 660, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime((opts.freq ?? 660)*0.8, c.currentTime+0.07);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.08);
+                o.start(c.currentTime); o.stop(c.currentTime+0.09);
+            }
+            else if(type === 'select'){
+                // 教科・カテゴリ選択
+                [0,0.05].forEach((d,i)=>{
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(i===0?440:550, c.currentTime+d);
+                    g.gain.setValueAtTime(0.14, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.12);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.13);
+                });
+            }
+            else if(type === 'toggle'){
+                // モード切替・トグル
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'square';
+                const f = opts.on ? 600 : 400;
+                o.frequency.setValueAtTime(f, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(f*0.75, c.currentTime+0.1);
+                g.gain.setValueAtTime(0.08, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.12);
+                o.start(c.currentTime); o.stop(c.currentTime+0.13);
+            }
+            else if(type === 'preset'){
+                // タイマープリセット
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(500, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(700, c.currentTime+0.06);
+                g.gain.setValueAtTime(0.13, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.1);
+                o.start(c.currentTime); o.stop(c.currentTime+0.11);
+            }
+            else if(type === 'start'){
+                // スタートボタン
+                [0,0.06,0.14].forEach((d,i)=>{
+                    const freqs = [400,550,700];
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(freqs[i], c.currentTime+d);
+                    g.gain.setValueAtTime(0.2, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.15);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.16);
+                });
+            }
+            else if(type === 'correct'){
+                // 正解
+                [0,0.09,0.2].forEach((d,i)=>{
+                    const freqs = [523,659,784];
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(freqs[i], c.currentTime+d);
+                    g.gain.setValueAtTime(0.2, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.18);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.19);
+                });
+            }
+            else if(type === 'wrong'){
+                // 不正解
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sawtooth';
+                o.frequency.setValueAtTime(320, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(160, c.currentTime+0.2);
+                g.gain.setValueAtTime(0.18, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.22);
+                o.start(c.currentTime); o.stop(c.currentTime+0.23);
+            }
+            else if(type === 'next'){
+                // 次の問題
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(440, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(380, c.currentTime+0.08);
+                g.gain.setValueAtTime(0.12, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.1);
+                o.start(c.currentTime); o.stop(c.currentTime+0.11);
+            }
+            else if(type === 'open'){
+                // オーバーレイ開く
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(380, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(520, c.currentTime+0.1);
+                g.gain.setValueAtTime(0.1, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.13);
+                o.start(c.currentTime); o.stop(c.currentTime+0.14);
+            }
+            else if(type === 'close'){
+                // オーバーレイ閉じる
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(520, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(340, c.currentTime+0.1);
+                g.gain.setValueAtTime(0.1, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.13);
+                o.start(c.currentTime); o.stop(c.currentTime+0.14);
+            }
+            else if(type === 'warn'){
+                // タイマー警告（30秒以下）
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'square';
+                o.frequency.setValueAtTime(880, c.currentTime);
+                g.gain.setValueAtTime(0.08, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.06);
+                o.start(c.currentTime); o.stop(c.currentTime+0.07);
+            }
+            else if(type === 'timeup'){
+                // タイムアップ
+                [0,0.1,0.2,0.35].forEach((d,i)=>{
+                    const freqs=[440,392,349,294];
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(freqs[i], c.currentTime+d);
+                    g.gain.setValueAtTime(0.18, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.12);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.13);
+                });
+            }
+            else if(type === 'lap'){
+                // 周回完了
+                [0,0.1,0.18,0.28].forEach((d,i)=>{
+                    const freqs=[523,659,784,1047];
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(freqs[i], c.currentTime+d);
+                    g.gain.setValueAtTime(0.18, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.15);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.16);
+                });
+            }
+            else if(type === 'perfect'){
+                // パーフェクト
+                [0,0.08,0.16,0.25,0.36].forEach((d,i)=>{
+                    const freqs=[523,659,784,1047,1319];
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(freqs[i], c.currentTime+d);
+                    g.gain.setValueAtTime(0.2, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.2);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.21);
+                });
+            }
+            else if(type === 'back'){
+                // 戻るボタン
+                const o = c.createOscillator();
+                o.connect(g);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(500, c.currentTime);
+                o.frequency.exponentialRampToValueAtTime(360, c.currentTime+0.09);
+                g.gain.setValueAtTime(0.1, c.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.11);
+                o.start(c.currentTime); o.stop(c.currentTime+0.12);
+            }
+            else if(type === 'chat'){
+                // チャット送信
+                [0,0.06].forEach((d,i)=>{
+                    const o = c.createOscillator();
+                    o.connect(g);
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(i===0?660:880, c.currentTime+d);
+                    g.gain.setValueAtTime(0.1, c.currentTime+d);
+                    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+d+0.08);
+                    o.start(c.currentTime+d); o.stop(c.currentTime+d+0.09);
+                });
+            }
+        }catch(e){}
+    }
+
+    window.SFX = play;
+
+    // === タイマースピナーに効果音 ===
+    document.querySelectorAll('.timer-spin-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>SFX('tick'));
+    });
+
+    // === タイマープリセットに効果音 ===
+    document.querySelectorAll('.timer-preset[data-time]').forEach(p=>{
+        p.addEventListener('click',()=>SFX('preset'));
+    });
+
+    // === 周回ボタンに効果音 ===
+    document.getElementById('lapMinus')?.addEventListener('click',()=>SFX('tick',{freq:500}));
+    document.getElementById('lapPlus')?.addEventListener('click',()=>SFX('tick',{freq:700}));
+    document.getElementById('lapInfinite')?.addEventListener('click',()=>SFX('toggle',{on:true}));
+
+    // === 出題モード切替に効果音 ===
+    document.getElementById('randomModeBtn')?.addEventListener('click',()=>SFX('toggle',{on:true}));
+    document.getElementById('sequentialModeBtn')?.addEventListener('click',()=>SFX('toggle',{on:false}));
+
+    // === スタートボタンに効果音 ===
+    document.getElementById('startQuizButton')?.addEventListener('click',()=>SFX('start'));
+
+    // === 教科選択に効果音 ===
+    document.querySelectorAll('.subj-item').forEach(btn=>{
+        btn.addEventListener('click',()=>SFX('select'));
+    });
+
+    // === 戻るボタンに効果音 ===
+    document.querySelectorAll('.back-link').forEach(btn=>{
+        btn.addEventListener('click',()=>SFX('back'));
+    });
+
+    // === オーバーレイ開閉に効果音 ===
+    document.getElementById('openStatsDetail')?.addEventListener('click',()=>SFX('open'));
+    document.getElementById('statsDetailClose')?.addEventListener('click',()=>SFX('close'));
+    document.getElementById('settingBtn')?.addEventListener('click',()=>SFX('open'));
+    document.getElementById('settingClose')?.addEventListener('click',()=>SFX('close'));
+    document.getElementById('histBtn')?.addEventListener('click',()=>SFX('open'));
+    document.getElementById('histClose')?.addEventListener('click',()=>SFX('close'));
+
+    // === AI設定モードボタンに効果音 ===
+    document.querySelectorAll('.mode-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>SFX('toggle',{on:true}));
+    });
+
+    // === トグルに効果音 ===
+    document.getElementById('timerAutoEnd')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
+    document.getElementById('autoAnalyzeTog')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
+    document.getElementById('bubbleInfinite')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
+
+    // === クイズ回答・ナビに効果音（MutationObserverで動的要素を監視）===
+    const quizResult = document.getElementById('quizResult');
+    if(quizResult){
+        const obs = new MutationObserver(()=>{
+            if(quizResult.classList.contains('ok')) SFX('correct');
+            else if(quizResult.classList.contains('ng')) SFX('wrong');
+        });
+        obs.observe(quizResult, {attributes:true, attributeFilter:['class']});
+    }
+
+    document.getElementById('quizNext')?.addEventListener('click',function(){
+        if(!this.disabled) SFX('next');
+    });
+    document.getElementById('quizBack')?.addEventListener('click',()=>SFX('back'));
+
+    // === チャット送信に効果音 ===
+    document.getElementById('chatSd')?.addEventListener('click',()=>SFX('chat'));
+    document.getElementById('chatIn')?.addEventListener('keydown',e=>{
+        if(e.key==='Enter') SFX('chat');
+    });
+
+    // === タイマー警告・タイムアップをhook ===
+    const origStart = window.startQuizTimer;
+    const origStop = window.stopQuizTimer;
+    let _warnPlayed = false;
+
+    // タイマーの警告とタイムアップを検知するためにtimerエレメントを監視
+    const timerEl = document.getElementById('quizTimer');
+    if(timerEl){
+        const timerObs = new MutationObserver((muts)=>{
+            muts.forEach(m=>{
+                if(m.attributeName==='class'){
+                    if(timerEl.classList.contains('expired')){
+                        SFX('timeup');
+                        _warnPlayed = false;
+                    } else if(timerEl.classList.contains('warning') && !_warnPlayed){
+                        SFX('warn');
+                        _warnPlayed = true;
+                    } else if(!timerEl.classList.contains('warning')){
+                        _warnPlayed = false;
+                    }
+                }
+            });
+        });
+        timerObs.observe(timerEl, {attributes:true, attributeFilter:['class']});
+    }
+
+    // === 周回完了・パーフェクト通知をglobal関数でhook ===
+    window.SFX_lapComplete = ()=>SFX('lap');
+    window.SFX_perfect = ()=>SFX('perfect');
+
+    // quizOptionsのクリック（選択肢タップ）に軽いフィードバック
+    const quizOptions = document.getElementById('quizOptions');
+    if(quizOptions){
+        quizOptions.addEventListener('click',e=>{
+            const opt = e.target.closest('.quiz-opt');
+            if(opt && !opt.disabled) SFX('tick',{freq:520,vol:0.1});
+        });
+    }
+
+    // ロゴクリック（戻る）に効果音
+    document.getElementById('logoMain')?.addEventListener('click',()=>SFX('back'));
+    document.getElementById('logoGame')?.addEventListener('click',()=>SFX('back'));
+
+    // === 決定ボタン（単元選択確定）に効果音 ===
+    const startBtnIds = ['startGeographyQuiz','startHistoryQuiz','startCivicsQuiz',
+        'startChemistryQuiz','startBiologyQuiz','startPhysicsQuiz','startEarthQuiz',
+        'startEnglishWordsQuiz','startEnglishPhrasesQuiz','startEnglishGrammarQuiz'];
+    startBtnIds.forEach(id=>{
+        document.getElementById(id)?.addEventListener('click',function(){
+            if(!this.disabled) SFX('select');
+        });
+    });
+
+    // === カテゴリ選択チェックボックス（cat-item）に効果音 ===
+    document.addEventListener('click',e=>{
+        const catItem = e.target.closest('.cat-item');
+        if(catItem) SFX('tick',{freq:600,vol:0.12});
+    });
+
+    // === tracker-itemクリック（苦手単元から出題）に効果音 ===
+    document.addEventListener('click',e=>{
+        const trackerItem = e.target.closest('.tracker-item');
+        if(trackerItem) SFX('select');
+    });
+})();
+
 /* ===== Timer & Lap Settings UI ===== */
 (function(){
     /* --- Timer Spinner --- */
