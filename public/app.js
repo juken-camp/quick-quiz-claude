@@ -879,8 +879,8 @@ function initModeUI() {
         }
     }
     if (slider && durLabel) {
-        // デフォルト10秒を反映
-        document.documentElement.style.setProperty('--bubble-duration', '10s');
+        // デフォルト30秒を反映（HTMLのvalue="30"と一致させる）
+        applyDuration();
         slider.addEventListener('input', () => { applyDuration(); sfx.click(); });
     }
     if (infiniteChk) {
