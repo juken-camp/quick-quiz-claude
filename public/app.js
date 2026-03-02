@@ -647,16 +647,15 @@ function spawnBubble(text, type = 'ai') {
     const el = document.createElement('div');
     el.className = `float-bubble ${type}`;
     el.innerHTML = type === 'user' ? text : formatBubbleText(text);
-    // 既存バブルの上に積む
-    const BASE = 100;
-    const GAP = 8;
-    let startBottom = BASE;
-    activeBubbles.forEach(b => { startBottom += (b.offsetHeight || 60) + GAP; });
-    el.style.bottom = startBottom + 'px';
+    // 初期位置（repositionBubblesで正しく配置される前の仮位置）
+    el.style.bottom = '100px';
     el.style.pointerEvents = 'auto';
     el.style.cursor = 'pointer';
     document.body.appendChild(el);
     activeBubbles.push(el);
+
+    // 全バブルの位置を再計算（重なり防止）
+    repositionBubbles();
 
     // タップで消去（効果音 + フェードアウト）
     function dismissBubble() {
