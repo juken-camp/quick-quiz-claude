@@ -463,8 +463,8 @@
         <div class="setting-card">
             <div class="setting-card-title">🎯 出題モード</div>
             <div class="mode-toggle">
-                <button id="randomModeBtn" class="mode-toggle-btn active">🎲 ランダム</button>
-                <button id="sequentialModeBtn" class="mode-toggle-btn">📋 順番通り</button>
+                <button id="randomModeBtn" class="mode-toggle-btn active" onclick="if(typeof SFX==='function')SFX('toggle',{on:true})">🎲 ランダム</button>
+                <button id="sequentialModeBtn" class="mode-toggle-btn" onclick="if(typeof SFX==='function')SFX('toggle',{on:false})">📋 順番通り</button>
             </div>
         </div>
 
@@ -514,7 +514,7 @@
             <div class="lap-desc" id="lapDesc">1周のみ — 全問を1回通して終了</div>
         </div>
 
-        <button id="startQuizButton" class="btn btn-bk btn-full" style="margin-top:16px">スタート →</button>
+        <button id="startQuizButton" class="btn btn-bk btn-full" style="margin-top:16px" onclick="if(typeof SFX==='function')SFX('start')">スタート →</button>
         <div class="spacer"></div>
     </div>
 </div>
@@ -901,28 +901,6 @@
 
     window.SFX = play;
 
-    // === タイマースピナーに効果音 ===
-    document.querySelectorAll('.timer-spin-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>SFX('tick'));
-    });
-
-    // === タイマープリセットに効果音 ===
-    document.querySelectorAll('.timer-preset[data-time]').forEach(p=>{
-        p.addEventListener('click',()=>SFX('preset'));
-    });
-
-    // === 周回ボタンに効果音 ===
-    document.getElementById('lapMinus')?.addEventListener('click',()=>SFX('tick',{freq:500}));
-    document.getElementById('lapPlus')?.addEventListener('click',()=>SFX('tick',{freq:700}));
-    document.getElementById('lapInfinite')?.addEventListener('click',()=>SFX('toggle',{on:true}));
-
-    // === 出題モード切替に効果音 ===
-    document.getElementById('randomModeBtn')?.addEventListener('click',()=>SFX('toggle',{on:true}));
-    document.getElementById('sequentialModeBtn')?.addEventListener('click',()=>SFX('toggle',{on:false}));
-
-    // === スタートボタンに効果音 ===
-    document.getElementById('startQuizButton')?.addEventListener('click',()=>SFX('start'));
-
     // === 教科選択に効果音 ===
     document.querySelectorAll('.subj-item').forEach(btn=>{
         btn.addEventListener('click',()=>SFX('select'));
@@ -1067,6 +1045,7 @@
             if(isMin) setMin(getMin()+dir);
             else setSec(getSec()+dir*5);
             syncPresets();
+            if(typeof window.SFX==='function') window.SFX('tick');
         }
         btn.addEventListener('click',step);
         // Long press repeat
@@ -1119,6 +1098,7 @@
             presets.forEach(pp=>pp.classList.remove('active'));
             p.classList.add('active');
             updateQuizSettings();
+            if(typeof window.SFX==='function') window.SFX('preset');
         });
     });
 
@@ -1147,9 +1127,9 @@
         }
         updateQuizSettings();
     }
-    lapMinus.addEventListener('click',()=>{if(lapCount>1){lapCount--;lapInfinite=false;renderLap()}});
-    lapPlus.addEventListener('click',()=>{if(lapCount<10){lapCount++;lapInfinite=false;renderLap()}});
-    lapInfBtn.addEventListener('click',()=>{lapInfinite=!lapInfinite;if(!lapInfinite&&lapCount<1)lapCount=1;renderLap()});
+    lapMinus.addEventListener('click',()=>{if(lapCount>1){lapCount--;lapInfinite=false;renderLap();if(typeof window.SFX==='function')window.SFX('tick',{freq:500})}});
+    lapPlus.addEventListener('click',()=>{if(lapCount<10){lapCount++;lapInfinite=false;renderLap();if(typeof window.SFX==='function')window.SFX('tick',{freq:700})}});
+    lapInfBtn.addEventListener('click',()=>{lapInfinite=!lapInfinite;if(!lapInfinite&&lapCount<1)lapCount=1;renderLap();if(typeof window.SFX==='function')window.SFX('toggle',{on:lapInfinite})});
     renderLap();
 
     /* --- Expose to window for app.js --- */
