@@ -926,22 +926,6 @@
         btn.addEventListener('click',()=>SFX('toggle',{on:true}));
     });
 
-    // === 口調変更時にAI先生バーのアイコンを更新 ===
-    const styleEmojis = {teacher:'👩‍🏫', friend:'🤙', exam:'📋'};
-    function updateAiBarEmoji(){
-        const active = document.querySelector('.mode-btn[data-style].mode-active');
-        if(!active) return;
-        const style = active.dataset.style;
-        const emoji = styleEmojis[style] || '✨';
-        const label = document.getElementById('aiBarLabel');
-        if(label) label.textContent = emoji + ' AI先生';
-    }
-    document.querySelectorAll('.mode-btn[data-style]').forEach(btn=>{
-        btn.addEventListener('click', ()=>setTimeout(updateAiBarEmoji, 50));
-    });
-    // 初期表示
-    updateAiBarEmoji();
-
     // === トグルに効果音 ===
     document.getElementById('timerAutoEnd')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
     document.getElementById('autoAnalyzeTog')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
