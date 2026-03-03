@@ -928,14 +928,22 @@ async function sendChat(message, isAuto = false) {
 
 // ---- モードUI初期化 ----
 function initModeUI() {
+    const styleEmojis = {teacher:'👩‍🏫', friend:'🤙', exam:'📋'};
+    function updateAiBarEmoji(style) {
+        const label = document.getElementById('aiBarLabel');
+        if (label) label.textContent = (styleEmojis[style] || '✨') + ' AI先生';
+    }
     document.querySelectorAll('[data-style]').forEach(btn => {
         btn.addEventListener('click', () => {
             aiMode.style = btn.dataset.style;
             document.querySelectorAll('[data-style]').forEach(b => b.classList.remove('mode-active'));
             btn.classList.add('mode-active');
+            updateAiBarEmoji(aiMode.style);
             sfx.click();
         });
     });
+    // 初期表示
+    updateAiBarEmoji(aiMode.style);
     document.querySelectorAll('[data-depth]').forEach(btn => {
         btn.addEventListener('click', () => {
             aiMode.depth = btn.dataset.depth;
