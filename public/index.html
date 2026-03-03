@@ -620,7 +620,7 @@
 
 <!-- AI先生 固定バー -->
 <div class="ai-bar" id="aiBar">
-    <div class="ai-bar-label">✨ AI先生</div>
+    <div class="ai-bar-label" id="aiBarLabel">🤙 AI先生</div>
     <input class="ai-bar-input" id="chatIn" placeholder="質問を入力..." autocomplete="off">
     <button class="ai-bar-btn ai-bar-send" id="chatSd" disabled>➤</button>
     <button class="ai-bar-btn ai-bar-icon" id="histBtn" title="履歴">📜</button>
@@ -636,7 +636,7 @@
         <div class="mode-row">
             <span class="mode-label">口調</span>
             <div class="mode-btns">
-                <button class="mode-btn" data-style="teacher">🧑‍🏫 先生</button>
+                <button class="mode-btn" data-style="teacher">👩‍🏫 先生</button>
                 <button class="mode-btn mode-active" data-style="friend">🤙 友達</button>
                 <button class="mode-btn" data-style="exam">📋 試験向け</button>
             </div>
@@ -925,6 +925,22 @@
     document.querySelectorAll('.mode-btn').forEach(btn=>{
         btn.addEventListener('click',()=>SFX('toggle',{on:true}));
     });
+
+    // === 口調変更時にAI先生バーのアイコンを更新 ===
+    const styleEmojis = {teacher:'👩‍🏫', friend:'🤙', exam:'📋'};
+    function updateAiBarEmoji(){
+        const active = document.querySelector('.mode-btn[data-style].mode-active');
+        if(!active) return;
+        const style = active.dataset.style;
+        const emoji = styleEmojis[style] || '✨';
+        const label = document.getElementById('aiBarLabel');
+        if(label) label.textContent = emoji + ' AI先生';
+    }
+    document.querySelectorAll('.mode-btn[data-style]').forEach(btn=>{
+        btn.addEventListener('click', ()=>setTimeout(updateAiBarEmoji, 50));
+    });
+    // 初期表示
+    updateAiBarEmoji();
 
     // === トグルに効果音 ===
     document.getElementById('timerAutoEnd')?.addEventListener('change',function(){SFX('toggle',{on:this.checked})});
