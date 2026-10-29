@@ -54,8 +54,10 @@ ${quizContext ? `【現在のクイズ情報】\n${quizContext}` : ''}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
+        // 通常の問題解説も含め、すべて低コストな Haiku 5.5 で処理する。
+        model: 'claude-haiku-5-5',
+        max_tokens: 1536, // 新トークナイザーで文章のトークン数が増えるため余裕を確保
+        thinking: { type: 'disabled' }, // 短い学習対話では思考トークンを使わない
         system: systemPrompt,
         messages: cleaned,
       }),
